@@ -1,14 +1,15 @@
-"""cutest-picture-01 entry (v2): copy the staged picture to the output.
+"""cutest-picture-01 entry (v3): copy the staged picture to the output.
 
-The picture (art.jpg, a baby otter floating at dusk and hugging a jar
-with a glowing firefly inside) ships in the repository next to this
-file. The run is a byte-for-byte copy, so both grading runs write
-identical bytes.
+The picture (art.jpg, a chubby baby bunny with huge open eyes blowing a
+giant dandelion, one seed landed on its nose) ships in the repository
+next to this file. The run is a byte-for-byte copy, so both grading
+runs write identical bytes.
 
 The image bytes are JPEG; the rules name the output entry.png either
 way and tell the formats apart by their first bytes.
 """
 
+import hashlib
 import os
 import shutil
 from pathlib import Path
@@ -32,7 +33,12 @@ def main() -> None:
         raise SystemExit(f"source picture is {len(data)} bytes; gate allows at most {MAX_BYTES}")
     if not data.startswith(MAGICS):
         raise SystemExit("source picture is neither JPEG nor PNG (bad magic bytes)")
-    shutil.copyfile(SOURCE, out_dir / "entry.png")
+    dest = out_dir / "entry.png"
+    shutil.copyfile(SOURCE, dest)
+    # Byte-for-byte means byte-for-byte: hash the copy and compare, so a
+    # copy that merely matches in size but differs in content still fails.
+    if hashlib.sha256(dest.read_bytes()).hexdigest() != hashlib.sha256(data).hexdigest():
+        raise SystemExit("copy mismatch: written bytes differ from the source picture")
 
 
 if __name__ == "__main__":
